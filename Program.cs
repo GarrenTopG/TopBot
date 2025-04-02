@@ -2,7 +2,8 @@
 using NAudio.Wave;  //Makes it possible to play audio files
 using System.Collections.Generic; //Enables use of list and dictionaries
 using System.Threading; //Used for typing effect and audio playback
-using System.IO; //Used for ASCII art and checking audio files
+using System.IO;
+using System.Reflection.Metadata.Ecma335; //Used for ASCII art and checking audio files
 
 class Chatbot //The class name is Chatbot, it contains all chatbot functions
 {
@@ -11,13 +12,12 @@ class Chatbot //The class name is Chatbot, it contains all chatbot functions
         Console.Title = "Top Bot"; //The console window title is set to "Top Bot"
         Console.OutputEncoding = System.Text.Encoding.UTF8; //Ensures emojis display properly
 
-        PlayAudio("new intro.wav"); //The PlayAudio functions plays the selected .wav sound file
+        PlayAudio("new short intro.wav"); //The PlayAudio functions plays the selected .wav sound file
         DisplayAsciiArt(); //This function shows the ASCII art
 
         Console.ForegroundColor = ConsoleColor.Magenta; //Changes the text colour to Magenta
-        Console.Write("\n👤 Enter your name: ");  //Asks the user for their name
+        string userName = GetValidUserName(); //Asks the user for their name
         Console.ResetColor(); //Resets the colour to the default colour
-        string userName = (Console.ReadLine() ?? "User").Trim(); //Reads inputs ,removes spaces & if empty defaults to "User
 
         TypingEffect($"\n🤖 Welcome, {userName}! Feel free to ask questions.", ConsoleColor.Cyan); //Displays the welcome message with typing effecct
         Console.WriteLine(); //Skips a space
@@ -156,7 +156,7 @@ class Chatbot //The class name is Chatbot, it contains all chatbot functions
             Console.ResetColor(); //Resets text colour
             string input = Console.ReadLine()?.ToLower().Trim(); //Reads user input, converts it to lower case and removes extra spaces
 
-            if (input == "exit") //If user types "exit", this exits the loop & ends the chat
+            if (input == "exit" || input.Equals("e", StringComparison.OrdinalIgnoreCase)) //If user types "exit", this exits the loop & ends the chat
             {
                 TypingEffect($"\nGoodbye {userName}! Have a great day further!", ConsoleColor.Green); //Prints an exit message
                 break; //Exit the loop
@@ -168,6 +168,36 @@ class Chatbot //The class name is Chatbot, it contains all chatbot functions
             TypingEffect($"\n🤖 Top Bot: {response}\n", ConsoleColor.Cyan); //Display chatbot's response
 
             PlayAudio(audioFile); //Plays corresponding audio response
+
+            Console.ForegroundColor= ConsoleColor.Yellow;
+            Console.WriteLine("Press 'e' to exit or type a new question: ");
+            Console.ResetColor();
         }
+    }
+    static bool IsValidName(string name)
+    {
+        foreach (char c in name)
+        {
+            if (!char.IsLetter(c) && c != ' ')
+                return false;
+        }
+        return true;
+    }
+    static string GetValidUserName()
+    {
+        string userName;
+        do
+        {
+            Console.Write("\n👤 Enter your name: ");
+            userName = (Console.ReadLine() ?? "").Trim();
+
+            if (string.IsNullOrEmpty(userName) || !IsValidName(userName))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Invalid name! Please enter only letters (no numbers or special characters).\n");
+                Console.ResetColor();
+            }
+        } while (string.IsNullOrEmpty(userName) || !IsValidName(userName));
+    return userName;
     }
 }
