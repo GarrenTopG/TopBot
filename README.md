@@ -17,11 +17,6 @@ Users can use either keypress 'e' or text entry of "exit" immediately following 
 
 ASCII Art Display: Displays fun ASCII art at startup.
 
-Installation & Setup
-
-Clone this repository:
-
-git clone https://github.com/yourusername/TopBot.git
 
 Launch the project by opening it through Visual Studio.
 
