@@ -1,38 +1,35 @@
-﻿using System; //Imports basic C# functions
+﻿using System.Text.RegularExpressions; //Used for pattern matching in user inputs
 using NAudio.Wave;  //Makes it possible to play audio files
-using System.Collections.Generic; //Enables use of list and dictionaries
-using System.Threading; //Used for typing effect and audio playback
-using System.IO;
-using System.Reflection.Metadata.Ecma335; //Used for ASCII art and checking audio files
 
 class Chatbot //The class name is Chatbot, it contains all chatbot functions
 {
-    static void Main(string[] args) //This is where the execution begins, It's the main function 
+    static string userName = ""; //Stores the user's name
+    static string userInterest = "";  //Stores the user's stated interest
+    const string interestFile = "interest.txt";  //Filename to store user interest persistently
+
+    static void Main(string[] args)
     {
-        Console.Title = "Top Bot"; //The console window title is set to "Top Bot"
-        Console.OutputEncoding = System.Text.Encoding.UTF8; //Ensures emojis display properly
+        // Set up the application
+        Console.Title = "Top Bot"; // Sets console window title
+        Console.OutputEncoding = System.Text.Encoding.UTF8; // Supports emoji and symbols
 
-        PlayAudio("new short intro.wav"); //The PlayAudio functions plays the selected .wav sound file
-        DisplayAsciiArt(); //This function shows the ASCII art
+        // Intro with sound and ASCII art
+        PlayAudio("new short intro.wav");
+        DisplayAsciiArt();
 
-        Console.ForegroundColor = ConsoleColor.Magenta; //Changes the text colour to Magenta
-        string userName = GetValidUserName(); //Asks the user for their name
-        Console.ResetColor(); //Resets the colour to the default colour
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        userName = GetValidUserName(); // Prompt for and validate user's name
+        Console.ResetColor();
 
-        TypingEffect($"\n🤖 Welcome, {userName}! Feel free to ask questions.", ConsoleColor.Cyan); //Displays the welcome message with typing effecct
-        Console.WriteLine(); //Skips a space
-        Console.ForegroundColor = ConsoleColor.DarkGreen; //Changes the text colour to Dark Green
-        Console.WriteLine($"-How are you?     -What's your purpose? -What can I ask about you?"); //Displays all Top Bot's available questions
-        Console.WriteLine($"-Password safety  -Phishing             -Safe browsing");
-        Console.WriteLine($"-How do I create a strong password?     -What are the signs of a phishing attack?");
-        Console.WriteLine($"-How can I tell if a website is safe?   -How do I stay safe on social media?");
-        Console.ResetColor(); //Resets the colour to the default colour
-        ChatLoop(userName); //Enables the conversation loop
+        TypingEffect($"\n🤖 Welcome, {userName}! I'm here to help you with cybersecurity.", ConsoleColor.Cyan);
+        DisplayHelp(); // Show the help menu
 
+        ChatLoop(); // Start the chatbot conversation loop
     }
 
     static void PlayAudio(string fileName) //The function to play an audio file
     {
+        // This function safely plays an audio file using NAudio
         try
         {
             if (File.Exists(fileName))  //Checks if the file exists
@@ -62,38 +59,27 @@ class Chatbot //The class name is Chatbot, it contains all chatbot functions
             Console.WriteLine($"ERROR Could not play audio: {ex.Message}"); //Displays the error message
         }
     }
-    static void DisplayAsciiArt() //Function to display the ASCII art
+    static void DisplayAsciiArt()
     {
-        string filePath1 = "gengar.txt"; //First ASCII art file
-        string filePath2 = "top bot logo.txt"; //Second ASCII art file
+        // Display branding using ASCII art from file
+        string[] artFiles = { "top bot logo.txt" };
+        Console.ForegroundColor = ConsoleColor.Cyan;
 
-        Console.ForegroundColor = ConsoleColor.Cyan; //This changes the text colour to cyan
-
-        if (File.Exists(filePath1)) //Checks if the first file exists
+        foreach (var file in artFiles)
         {
-            Console.WriteLine(File.ReadAllText(filePath1)); //Reads and prints the file contents
-        }
-        else //If the file is missing, will display an error message 
-        {
-            Console.ForegroundColor = ConsoleColor.Red; //This changes the text colour to Red
-            Console.WriteLine("ERROR first ASCII art file is not found!!!"); //Displays an error message
-            Console.ResetColor(); //Resets the text colour back to cyan
-        }
-
-        Console.WriteLine(); //Skips a space for better readability 
-
-        if (File.Exists(filePath2)) //Checks if the second file exists 
-        {
-            Console.WriteLine(File.ReadAllText(filePath2)); //Reads and prints the second ASCII art
-        }
-        else //If the file is missing it will display an error message 
-        {
-            Console.ForegroundColor = ConsoleColor.Red; //Changes the text colour to red
-            Console.WriteLine("ERROR second ASCII art file is not found!!!"); //Displays an error message
-            Console.ResetColor(); //Resets the text colour to default
+            if (File.Exists(file))
+            {
+                Console.WriteLine(File.ReadAllText(file));
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"ERROR: {file} not found!");
+            }
+            Console.WriteLine();
         }
 
-        Console.ResetColor(); //Resets the text colour to default
+        Console.ResetColor();
     }
 
     static void TypingEffect(string text, ConsoleColor color) //Function that prints text with a typing effect
@@ -110,7 +96,7 @@ class Chatbot //The class name is Chatbot, it contains all chatbot functions
         Console.WriteLine(); //Moves to the next line after finishing
     }
 
-    static string TopBotResponse(string input, string userName, out string audioFile) //Function to get a response based on user input
+    /* static string TopBotResponse(string input, string userName, out string audioFile) //Function to get a response based on user input
     {
         var responses = new Dictionary<string, (string Text, string Audio)> //Stores responses and the corresponding audio files
         { {"whats your purpose", ($"My sole mission is to make sure you stay secure online. " +
@@ -145,37 +131,37 @@ class Chatbot //The class name is Chatbot, it contains all chatbot functions
 
         audioFile = "invalid input.wav"; //If no match is found , return the default audio file 
         return $"Hmm I'm not sure I understand that, {userName}. Please rephrase the question"; //The default response when the input is recognized
-    }
+    } */
 
-    static void ChatLoop(string userName) //Function that handles the chatbot conversation
+    static void ChatLoop()
     {
-        while (true) //Infinite loop to keep the conversation going
+        // Keeps the chatbot running until user types "exit"
+        while (true)
         {
-            Console.ForegroundColor = ConsoleColor.Magenta; //Sets the text colour to magenta 
-            Console.Write("\n👤 You: "); //Displays "You: " prompt for user input
-            Console.ResetColor(); //Resets text colour
-            string input = Console.ReadLine()?.ToLower().Trim(); //Reads user input, converts it to lower case and removes extra spaces
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write("\n👤 You: ");
+            Console.ResetColor();
+            string input = Console.ReadLine()?.ToLower().Trim();
 
-            if (input == "exit" || input.Equals("e", StringComparison.OrdinalIgnoreCase)) //If user types "exit", this exits the loop & ends the chat
+            if (string.IsNullOrWhiteSpace(input)) continue;
+
+            if (input == "exit" || input == "e")
             {
-                TypingEffect($"\nGoodbye {userName}! Have a great day further!", ConsoleColor.Green); //Prints an exit message
-                break; //Exit the loop
+                TypingEffect($"\nGoodbye {userName}! Have a great day!", ConsoleColor.Green);
+                break;
             }
 
-            string audioFile; // Declares a string variable to store the name of the audio file that will be played as a response
-            string response = TopBotResponse(input, userName, out audioFile); //Get chatbot response
+            string response = GetSentimentAdjustedResponse(input);
+            TypingEffect($"\n🤖 Top Bot: {response}", ConsoleColor.Cyan);
 
-            TypingEffect($"\n🤖 Top Bot: {response}\n", ConsoleColor.Cyan); //Display chatbot's response
-
-            PlayAudio(audioFile); //Plays corresponding audio response
-
-            Console.ForegroundColor= ConsoleColor.Yellow;
-            Console.WriteLine("Press 'e' to exit or type a new question: ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\nAsk another question or type 'exit' to leave.");
             Console.ResetColor();
         }
     }
     static bool IsValidName(string name)
     {
+        // Check that name contains only letters or spaces
         foreach (char c in name)
         {
             if (!char.IsLetter(c) && c != ' ')
@@ -198,6 +184,121 @@ class Chatbot //The class name is Chatbot, it contains all chatbot functions
                 Console.ResetColor();
             }
         } while (string.IsNullOrEmpty(userName) || !IsValidName(userName));
-    return userName;
+        return userName;
+    }
+
+    static Dictionary<string, List<string>> keywordResponses = new Dictionary<string, List<string>>
+    {
+        { "phishing", new List<string>
+            {
+                "Phishing scams often look like messages from trusted sources. Always double-check the sender's email and avoid clicking links unless you're sure they're safe.",
+                "Attackers use fake websites to steal your credentials. Before logging in anywhere, inspect the URL closely for odd characters or misspellings.",
+                "Be cautious of urgent messages that pressure you to act quickly. Real companies don’t demand sensitive information over email or text."
+            }
+        },
+        { "password", new List<string>
+            {
+                "Use passwords that are long, random, and unique. A mix of uppercase letters, symbols, and numbers greatly boosts your account’s security.",
+                "Avoid using personal information in your passwords. Things like your name or birthdate are easy for attackers to guess or find online.",
+                "Consider using a password manager to generate and store secure passwords. This reduces reuse and keeps your accounts safer."
+            }
+        },
+        { "privacy", new List<string>
+            {
+                "Think twice before posting personal details online. Once shared, your info can be stored, sold, or misused without your knowledge.",
+                "Review your app permissions regularly. Many apps request access they don’t need, which can expose more data than you intended.",
+                "Use privacy-focused tools like encrypted messaging apps and search engines that don’t track you. They help limit your digital footprint."
+            }
+        }
+    };
+
+    static string GetResponseFromKeyword(string input)
+    {
+        // Match input keywords to a list of responses and pick one randomly
+        foreach (var entry in keywordResponses)
+        {
+            if (input.Contains(entry.Key))
+            {
+                string selected = entry.Value[new Random().Next(entry.Value.Count)];
+                return selected;
+            }
+        }
+
+        // Default fallback message
+        return "I'm not yet programmed to answer that. In a future update, I'll be able to help with even more topics!";
+    }
+
+    static string GetSentimentAdjustedResponse(string input)
+    {
+        /* string audioFile;
+        string responseFromTopBot = TopBotResponse(input, userName, out audioFile);
+
+        if (!responseFromTopBot.StartsWith("Hmm I'm not sure")) // Meaning: we got a match
+        {
+            PlayAudio(audioFile); // Play the associated audio
+            return responseFromTopBot;
+        } */
+
+        // Emotion detection
+        if ((input.Contains("worried") || input.Contains("scared")) && input.Contains("scam"))
+        {
+            return "It's completely understandable to feel that way. Scammers can be very convincing. Let me share some tips to help you stay safe.";
+        }
+        if (input.Contains("worried") || input.Contains("scared"))
+        {
+            return "It's okay to feel worried. Cyber threats are real, but I'm here to help you navigate them.";
+        }
+        if (input.Contains("frustrated") || input.Contains("angry"))
+        {
+            return "Take a deep breath. Cybersecurity can be frustrating, but we’ll work through it together.";
+        }
+        if (input.Contains("curious"))
+        {
+            return "Curiosity is great! Ask me about anything from phishing to password safety to privacy tips.";
+        }
+
+        // Detect and save interest
+        if (input.StartsWith("i'm interested in ") || input.StartsWith("im interested in "))
+        {
+            int startIndex = input.IndexOf("interested in ") + "interested in ".Length;
+            userInterest = input.Substring(startIndex).Trim('.', ' ', '?');
+
+            File.WriteAllText(interestFile, userInterest);
+            return $"Great! I'll remember that you're interested in {userInterest}. It's a key area of cybersecurity.";
+        }
+
+        // Handle "remind me" with persistence
+        if (Regex.IsMatch(input, @"\b(remind me|what did i say|what was my interest)\b"))
+        {
+            if (File.Exists(interestFile))
+            {
+                string savedInterest = File.ReadAllText(interestFile).Trim();
+                if (!string.IsNullOrEmpty(savedInterest))
+                {
+                    return $"You told me you're interested in {savedInterest}. Be sure to keep learning about it regularly.";
+                }
+            }
+            return "I don't have any saved interest from you yet. Try saying 'I'm interested in privacy' or another topic.";
+        }
+
+        // Keyword detection
+        return GetResponseFromKeyword(input);
+    }
+
+    static void DisplayHelp()
+    {
+        // Shows available commands to the user
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("\n📌 You can ask me about these cybersecurity topics:");
+        Console.WriteLine(" - Phishing\n - Password Safety\n - Online Privacy");
+        Console.WriteLine("\n📌 I'm trained to respond to emotions like:");
+        Console.WriteLine(" - Worried\n - Frustrated\n - Curious");
+        Console.WriteLine("\n📌 Example prompts:");
+        Console.WriteLine(" - I'm worried about online scams.");
+        Console.WriteLine(" - Give me a phishing tip.");
+        Console.WriteLine(" - I'm interested in privacy.");
+        Console.WriteLine(" - Remind me what I liked.");
+        Console.WriteLine(" - How can I make a strong password?");
+        Console.ResetColor();
     }
 }
